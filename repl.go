@@ -14,15 +14,15 @@ func startRepl(cfg *apiConfig) {
 	for {
 		fmt.Print("> ")
 		if reader.Scan() {
-			input := cleanInput(reader.Text())
-			if len(input) == 0 {
+			cmd, inputs := cleanInput(reader.Text())
+			if len(inputs) == 0 {
 				continue
 			}
-			command, ok := getCommands()[input[0]]
+			command, ok := getCommands()[cmd]
 			if ok {
 				var cliArg *string
-				if len(input) > 1 {
-					arg := input[1]
+				if len(inputs) > 1 {
+					arg := strings.Join(inputs[1:], " ")
 					cliArg = &arg
 				}
 				err := command.callback(cfg, cliArg)
@@ -66,15 +66,25 @@ func getCommands() map[string]cliCommand {
 			description: "follow let you add a rss feed to your database for which gorss will aggregate data every few minutes when its open if it just opened gorss will only aggregate today's posts",
 			callback:    commandFollow,
 		},
+		"followed": {
+			name:        "followed",
+			description: "followed shows you which channels you are following",
+			callback:    commandFollowed,
+		},
+		"unfollow": {
+			name:        "unfollow {channel name}",
+			description: "deletes the channel from the database",
+			callback:    commandUnfollow,
+		},
 	}
 	return commands
 }
 
-func cleanInput(text string) []string {
-	output := strings.TrimSpace(text)
-	output = strings.ToLower(output)
-	outputs := strings.Split(output, " ")
-	return outputs
+func cleanInput(text string) (string, []string) {
+	inputs := strings.Split(text, " ")
+	command := strings.TrimSpace(inputs[0])
+	command = strings.ToLower(command)
+	return command, inputs
 }
 
 func commandClear(*apiConfig, *string) error {

@@ -61,12 +61,15 @@ spec:
 
 ### TODO
     [ ] rss aggregator & DB
-        [ ] fetching feed
-        [x] insert in db
-        [ ] insert posts
-        [ ] recognize new post
-        [ ] good way of fetching and displaying temporary channels/posts like comments
-        [ ] fetching images
+        [x] fetching feeds
+        [x] insert them in db (follow command)
+        [x] followed channel viewer
+        [x] remove from db (unfollow command)
+        [ ] store post in db after following
+        [ ]
+        [ ] aggregating feeds in db concurently (worker)
+        [ ] inserting post in db (after aggregating) (make sure logic schema is good)
+        [ ] 
     [ ] displaying
         [ ] following channels and following their sub? channels(comments)
         [ ] ergonomic way of displaying channels

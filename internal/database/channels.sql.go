@@ -31,3 +31,40 @@ func (q *Queries) CreateChannel(ctx context.Context, arg CreateChannelParams) er
 	)
 	return err
 }
+
+const deleteChannel = `-- name: DeleteChannel :exec
+DELETE FROM channels
+WHERE title = ?
+`
+
+func (q *Queries) DeleteChannel(ctx context.Context, title string) error {
+	_, err := q.db.ExecContext(ctx, deleteChannel, title)
+	return err
+}
+
+const viewChannel = `-- name: ViewChannel :many
+SELECT title FROM channels
+`
+
+func (q *Queries) ViewChannel(ctx context.Context) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, viewChannel)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var title string
+		if err := rows.Scan(&title); err != nil {
+			return nil, err
+		}
+		items = append(items, title)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

@@ -29,5 +29,20 @@ func commandFollow(cfg *apiConfig, cliArg *string) error {
 		return err
 	}
 
+	// fetch posts from feed temporary place
+	channelID, err := cfg.DB.TitleGetChannelID(context.Background(), feed.Title)
+	if err != nil {
+		return err
+	}
+	for _, item := range feed.Items {
+		cfg.DB.CreatePost(context.Background(), database.CreatePostParams{
+			ChannelID:   channelID,
+			Title:       item.Title,
+			Description: toNullString(item.Description),
+			Link:        item.Link,
+			PubDate:     toNullTime(*item.PublishedParsed),
+		})
+	}
+
 	return nil
 }

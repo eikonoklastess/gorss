@@ -65,11 +65,10 @@ spec:
         [x] insert them in db (follow command)
         [x] followed channel viewer
         [x] remove from db (unfollow command)
-        [ ] store post in db after following
-        [ ]
+        [x] store post in db after following
+        [x] view post by channel
         [ ] aggregating feeds in db concurently (worker)
         [ ] inserting post in db (after aggregating) (make sure logic schema is good)
-        [ ] 
     [ ] displaying
         [ ] following channels and following their sub? channels(comments)
         [ ] ergonomic way of displaying channels

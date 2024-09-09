@@ -6,13 +6,13 @@ import (
 )
 
 func commandFollowed(cfg *apiConfig, cliArg *string) error {
-	channelsTitle, err := cfg.DB.ViewChannel(context.Background())
+	channels, err := cfg.DB.GetChannels(context.Background())
 	if err != nil {
 		fmt.Println("> viewing your followed channels has failed")
 		return err
 	}
-	for _, channel := range channelsTitle {
-		fmt.Println(channel)
+	for _, channel := range channels {
+		fmt.Printf("> %s: %s\n", channel.Title, channel.Description.String)
 	}
 	return nil
 }

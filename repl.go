@@ -76,6 +76,11 @@ func getCommands() map[string]cliCommand {
 			description: "deletes the channel from the database",
 			callback:    commandUnfollow,
 		},
+		"posts": {
+			name:        "posts {channel_name}",
+			description: "fetches from the database the channels posts",
+			callback:    commandPosts,
+		},
 	}
 	return commands
 }

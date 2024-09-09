@@ -10,6 +10,42 @@ import (
 	"database/sql"
 )
 
+const channelGetPosts = `-- name: ChannelGetPosts :many
+SELECT id, channel_id, title, description, link, pub_date, created_at FROM posts
+WHERE channel_id = ?
+`
+
+func (q *Queries) ChannelGetPosts(ctx context.Context, channelID int64) ([]Post, error) {
+	rows, err := q.db.QueryContext(ctx, channelGetPosts, channelID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Post
+	for rows.Next() {
+		var i Post
+		if err := rows.Scan(
+			&i.ID,
+			&i.ChannelID,
+			&i.Title,
+			&i.Description,
+			&i.Link,
+			&i.PubDate,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const createChannel = `-- name: CreateChannel :exec
 INSERT INTO channels (title, description, link, last_updated)
 VALUES (?, ?, ?, ?)
@@ -32,6 +68,30 @@ func (q *Queries) CreateChannel(ctx context.Context, arg CreateChannelParams) er
 	return err
 }
 
+const createPost = `-- name: CreatePost :exec
+INSERT INTO posts (channel_id, title, description, link, pub_date)
+VALUES (?, ?, ?, ?, ?)
+`
+
+type CreatePostParams struct {
+	ChannelID   int64
+	Title       string
+	Description sql.NullString
+	Link        string
+	PubDate     sql.NullTime
+}
+
+func (q *Queries) CreatePost(ctx context.Context, arg CreatePostParams) error {
+	_, err := q.db.ExecContext(ctx, createPost,
+		arg.ChannelID,
+		arg.Title,
+		arg.Description,
+		arg.Link,
+		arg.PubDate,
+	)
+	return err
+}
+
 const deleteChannel = `-- name: DeleteChannel :exec
 DELETE FROM channels
 WHERE title = ?
@@ -42,23 +102,30 @@ func (q *Queries) DeleteChannel(ctx context.Context, title string) error {
 	return err
 }
 
-const viewChannel = `-- name: ViewChannel :many
-SELECT title FROM channels
+const getChannels = `-- name: GetChannels :many
+SELECT id, title, description, link, last_updated, created_at FROM channels
 `
 
-func (q *Queries) ViewChannel(ctx context.Context) ([]string, error) {
-	rows, err := q.db.QueryContext(ctx, viewChannel)
+func (q *Queries) GetChannels(ctx context.Context) ([]Channel, error) {
+	rows, err := q.db.QueryContext(ctx, getChannels)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []string
+	var items []Channel
 	for rows.Next() {
-		var title string
-		if err := rows.Scan(&title); err != nil {
+		var i Channel
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.Description,
+			&i.Link,
+			&i.LastUpdated,
+			&i.CreatedAt,
+		); err != nil {
 			return nil, err
 		}
-		items = append(items, title)
+		items = append(items, i)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err
@@ -67,4 +134,16 @@ func (q *Queries) ViewChannel(ctx context.Context) ([]string, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const titleGetChannelID = `-- name: TitleGetChannelID :one
+SELECT id FROM channels
+WHERE title = ?
+`
+
+func (q *Queries) TitleGetChannelID(ctx context.Context, title string) (int64, error) {
+	row := q.db.QueryRowContext(ctx, titleGetChannelID, title)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
 }
